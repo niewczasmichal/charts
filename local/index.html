@@ -11,15 +11,15 @@
             }
 
             div {
-                width: 50%;
-                height: 50%;
+                width: 45%;
+                height: 45%;
                 float: left;
             }
         </style>
     </head>
     <body onload="startup()">
         <div>
-            <canvas id="ramchart"></canvas> 
+            <canvas id="ramchart"></canvas>
         </div>
         <div>
             <canvas id="cpuchart"></canvas>
@@ -28,7 +28,9 @@
             <canvas id="videochart"></canvas>
         </div>  
         <div>
-            <canvas id="audiochart"></canvas>
+            <p><label for="tizens">Tizen:</label> <select name="tizens" id="tizens" onchange="changetv()"></select></p>
+            <p>Average RAM usage: <span id="avgRam"></span>MB</p>
+            <p>Clear graphs: <button onclick="clearContent()">Clear</button></p>
         </div>         
     </body>
 </html>
