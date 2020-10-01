@@ -15,12 +15,14 @@ function prepareCharts(){
                 label: 'RAM usage',   
                 data: selectedTv.ramC,
                 fill: false,
-                borderColor: 'yellow'
+                borderColor: 'yellow',
+                lineTension: 0
             }, {
                 label: 'RAM total',
                 data: selectedTv.MaxRam,
                 fill: false,
-                borderColor: 'red'
+                borderColor: 'red',
+                lineTension: 0
             }]
         },
         options: {
@@ -28,6 +30,20 @@ function prepareCharts(){
                 point:{
                     radius: 0
                 }
+            },
+            scales: {
+                xAxes: [{
+                    scaleLabel:{
+                        display: true,
+                        labelString: 'seconds'
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel:{
+                        display: true,
+                        labelString: 'MB'
+                    }
+                }]
             }
         }
     });
@@ -41,7 +57,8 @@ function prepareCharts(){
                 label: 'CPU load',   
                 data: selectedTv.cpuLoad,
                 fill: false,
-                borderColor: 'red'
+                borderColor: 'red',
+                lineTension: 0
             }]
         },
         options: {
@@ -51,10 +68,20 @@ function prepareCharts(){
                 }
             },
             scales: {
+                xAxes: [{
+                    scaleLabel:{
+                        display: true,
+                        labelString: 'seconds'
+                    }
+                }],
                 yAxes: [{
                     ticks: {
                         suggestedMin: 0,
                         suggestedMax: 100
+                    },
+                    scaleLabel:{
+                        display: true,
+                        labelString: '%'
                     }
                 }]
             }
@@ -70,7 +97,8 @@ function prepareCharts(){
                 label: 'Video bitrate',   
                 data: selectedTv.videoBitrate,
                 fill: false,
-                borderColor: 'green'
+                borderColor: 'green',
+                lineTension: 0
             }]
         },
         options: {
@@ -78,6 +106,20 @@ function prepareCharts(){
                 point:{
                     radius: 0
                 }
+            },
+            scales: {
+                xAxes: [{
+                    scaleLabel:{
+                        display: true,
+                        labelString: 'seconds'
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel:{
+                        display: true,
+                        labelString: 'Bits'
+                    }
+                }]
             }
         }
     });
@@ -85,7 +127,7 @@ function prepareCharts(){
 }
 
 function getData(){
-    fetch('http://192.168.0.206:3000/heartbeat/get', {
+    fetch('http://192.168.1.165:3000/heartbeat/get', {
 		  method: 'GET'
         })
         .then(response => response.json())
@@ -95,6 +137,36 @@ function getData(){
 function changetv(){
     selectedTv = tvMap.get(tizens.value);
     prepareCharts();
+}
+
+function sortList() 
+{ 
+    var lb = document.getElementById('tizens'); 
+    arrTexts = new Array(); 
+    arrValues = new Array(); 
+    arrOldTexts = new Array(); 
+
+    for(i=0; i<lb.length; i++) 
+    { 
+        arrTexts[i] = lb.options[i].text; 
+        arrValues[i] = lb.options[i].value; 
+        arrOldTexts[i] = lb.options[i].text; 
+    } 
+
+    arrTexts.sort(); 
+
+    for(i=0; i<lb.length; i++) 
+    { 
+        lb.options[i].text = arrTexts[i]; 
+        for(j=0; j<lb.length; j++) 
+        { 
+            if (arrTexts[i] == arrOldTexts[j]) 
+            { 
+                lb.options[i].value = arrValues[j]; 
+                j = lb.length; 
+            } 
+        } 
+    } 
 }
 
 function setVars(data){
@@ -115,6 +187,7 @@ function setVars(data){
                 var option = document.createElement("option");
                 option.text = element.Model;
                 tizens.add(option);
+                sortList();
                 tvMap.set(element.Model, x);
                 if (!selectedTv){
                     changetv();
@@ -125,7 +198,12 @@ function setVars(data){
                 var tv = tvMap.get(element.Model);
                 tv.MaxRam.push(Math.round(element.Details.TotalRAM/1024/1024));
                 tv.ramC.push(Math.round(element.Details.UsedRAM/1024/1024));
-                tv.cpuLoad.push(Math.round(element.Details.CPU));
+                if(element.Details.CPU == 0){
+                    tv.cpuLoad.push(tv.cpuLoad[tv.cpuLoad.length-1]);
+                }
+                else{
+                    tv.cpuLoad.push(Math.round(element.Details.CPU));
+                }
                 tv.videoBitrate.push(element.Details.VideoBitrate);
                 tv.audioBitrate.push(element.Details.AudioBitrate);
                 tv.labels.push(tv.i);
@@ -148,13 +226,6 @@ function debugInfo(){
 }
 
 function clearContent(){
-    // selectedTv.i = 1;
-    // selectedTv.MaxRam = [];
-    // selectedTv.ramC = [];
-    // selectedTv.cpuLoad = [];
-    // selectedTv.videoBitrate = [];
-    // selectedTv.audioBitrate = [];
-    // selectedTv.labels = [];
     selectedTv.i = 1;
     selectedTv.MaxRam = selectedTv.MaxRam.slice(selectedTv.MaxRam.length - 1);
     selectedTv.ramC = selectedTv.ramC.slice(selectedTv.ramC.length - 1);
