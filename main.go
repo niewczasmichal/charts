@@ -98,7 +98,7 @@ func endHeartbeat(w http.ResponseWriter, r *http.Request) {
 
 	defer f.Close()
 
-	js, err := json.Marshal(hbarr)
+	js, err := json.Marshal(hbarr[h.Model])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

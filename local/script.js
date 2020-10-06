@@ -260,6 +260,9 @@ function debugInfo(){
     selectedTv.ramC.forEach(element => {
         sum += element;
     });
+    document.getElementById("timestart").innerHTML = new Date(selectedTv.timeStarted).toString();
+    document.getElementById("lastupdate").innerHTML = new Date(selectedTv.update).toString();
+
     document.getElementById("avgRam").innerHTML = Math.round(sum/selectedTv.ramC.length);
     document.getElementById("bitversion").innerHTML = selectedTv.streamDetails.BitVersion;
     document.getElementById("totalRam").innerHTML = selectedTv.MaxRam;
@@ -271,8 +274,6 @@ function debugInfo(){
     else{
         document.getElementById("timeend").innerHTML = ""
     }
-    document.getElementById("timestart").innerHTML = new Date(selectedTv.timeStarted).toString();
-    document.getElementById("lastupdate").innerHTML = new Date(selectedTv.update).toString();
     document.getElementById("duration").innerHTML = sToTime(selectedTv.streamDetails.Duration);
     document.getElementById("stalltime").innerHTML = sToTime(selectedTv.streamDetails.TotalST);
     document.getElementById("islive").innerHTML = selectedTv.streamDetails.IsLive;
