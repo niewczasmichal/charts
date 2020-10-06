@@ -12,20 +12,28 @@ function prepareCharts(){
         data: {
             labels: selectedTv.labels,
             datasets: [{
-                label: 'RAM usage',   
                 data: selectedTv.ramC,
                 fill: false,
                 borderColor: 'yellow',
                 lineTension: 0
-            }, {
-                label: 'RAM total',
-                data: selectedTv.MaxRam,
-                fill: false,
-                borderColor: 'red',
-                lineTension: 0
-            }]
+            }
+            // , {
+            //     label: 'RAM total',
+            //     data: selectedTv.MaxRam,
+            //     fill: false,
+            //     borderColor: 'red',
+            //     lineTension: 0
+            // }
+        ]
         },
         options: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'RAM usage'
+            },
             elements: {
                 point:{
                     radius: 0
@@ -62,6 +70,13 @@ function prepareCharts(){
             }]
         },
         options: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'CPU load'
+            },
             elements: {
                 point:{
                     radius: 0
@@ -102,6 +117,13 @@ function prepareCharts(){
             }]
         },
         options: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'Video bitrate'
+            },
             elements: {
                 point:{
                     radius: 0
@@ -123,7 +145,6 @@ function prepareCharts(){
             }
         }
     });
-
 }
 
 function getData(){
@@ -136,7 +157,7 @@ function getData(){
 
 function changetv(){
     selectedTv = tvMap.get(tizens.value);
-    prepareCharts();
+    // prepareCharts();
 }
 
 function sortList() 
@@ -174,14 +195,16 @@ function setVars(data){
         data.forEach(element => {
             if(!tvMap.get(element.Model)){
                 var x = {
-                    model: element.Model,
-                    i: 1,
-                    MaxRam: [Math.round(element.Details.TotalRAM/1024/1024)],
-                    ramC: [Math.round(element.Details.UsedRAM/1024/1024)],
-                    cpuLoad: [Math.round(element.Details.CPU)],
-                    videoBitrate: [element.Details.VideoBitrate],
-                    audioBitrate: [element.Details.AudioBitrate],
-                    labels: [0]
+                    model: element.Model,   
+                    MaxRam: element.Details.TotalRAM,
+                    ramC: element.Details.UsedRAM,
+                    cpuLoad: element.Details.CPU,
+                    videoBitrate: element.Details.VideoBitrate,
+                    labels: element.Details.Iteration,
+                    streamDetails: element.StreamDetails,
+                    timeStarted: element.TimeStarted,
+                    timeEnd: element.TimeEnded,
+                    update: element.LastUpdate
                 }
                 var tizens = document.getElementById("tizens");
                 var option = document.createElement("option");
@@ -196,20 +219,23 @@ function setVars(data){
             }
             else{
                 var tv = tvMap.get(element.Model);
-                tv.MaxRam.push(Math.round(element.Details.TotalRAM/1024/1024));
-                tv.ramC.push(Math.round(element.Details.UsedRAM/1024/1024));
-                if(element.Details.CPU == 0){
-                    tv.cpuLoad.push(tv.cpuLoad[tv.cpuLoad.length-1]);
-                }
-                else{
-                    tv.cpuLoad.push(Math.round(element.Details.CPU));
-                }
-                tv.videoBitrate.push(element.Details.VideoBitrate);
-                tv.audioBitrate.push(element.Details.AudioBitrate);
-                tv.labels.push(tv.i);
-                tv.i++;
+                tv.ramC = element.Details.UsedRAM;
+                tv.cpuLoad = element.Details.CPU;
+                tv.videoBitrate = element.Details.VideoBitrate;
+                tv.labels = element.Details.Iteration;
+                tv.timeEnd = element.TimeEnded;
+                tv.update = element.LastUpdate;
             }
         });
+        // prepareCharts();
+        changetv();
+        console.log("111");
+        ramchart.data.labels = selectedTv.labels;
+        ramchart.data.datasets[0].data = selectedTv.ramC;
+        cpuchart.data.labels = selectedTv.labels;
+        cpuchart.data.datasets[0].data = selectedTv.cpuLoad;
+        videochart.data.labels = selectedTv.labels;
+        videochart.data.datasets[0].data = selectedTv.videoBitrate;
         ramchart.update();
         cpuchart.update();   
         videochart.update();
@@ -217,22 +243,38 @@ function setVars(data){
     }
 }
 
+function sToTime(duration) {
+	var seconds = Math.floor(duration % 60),
+	  minutes = Math.floor((duration / 60) % 60),
+	  hours = Math.floor((duration / (60 * 60)) % 24);
+  
+	hours = (hours < 10) ? "0" + hours : hours;
+	minutes = (minutes < 10) ? "0" + minutes : minutes;
+	seconds = (seconds < 10) ? "0" + seconds : seconds;
+  
+	return hours + ":" + minutes + ":" + seconds;
+  }
+
 function debugInfo(){
     var sum = 0;
     selectedTv.ramC.forEach(element => {
         sum += element;
     });
     document.getElementById("avgRam").innerHTML = Math.round(sum/selectedTv.ramC.length);
-}
-
-function clearContent(){
-    selectedTv.i = 1;
-    selectedTv.MaxRam = selectedTv.MaxRam.slice(selectedTv.MaxRam.length - 1);
-    selectedTv.ramC = selectedTv.ramC.slice(selectedTv.ramC.length - 1);
-    selectedTv.cpuLoad = selectedTv.cpuLoad.slice(selectedTv.cpuLoad.length - 1);
-    selectedTv.videoBitrate = selectedTv.videoBitrate.slice(selectedTv.videoBitrate.length - 1);
-    selectedTv.audioBitrate = selectedTv.audioBitrate.slice(selectedTv.audioBitrate.length - 1);
-    selectedTv.labels = selectedTv.labels.slice(selectedTv.labels.length - 1);
-    console.log(selectedTv);
-    prepareCharts();
+    document.getElementById("bitversion").innerHTML = selectedTv.streamDetails.BitVersion;
+    document.getElementById("totalRam").innerHTML = selectedTv.MaxRam;
+    document.getElementById("asset").innerHTML = selectedTv.streamDetails.Asset;
+    document.getElementById("drm").innerHTML = selectedTv.streamDetails.DRM;
+    if(selectedTv.timeEnd != ""){
+        document.getElementById("timeend").innerHTML = new Date(selectedTv.timeEnd).toString();
+    }
+    else{
+        document.getElementById("timeend").innerHTML = ""
+    }
+    document.getElementById("timestart").innerHTML = new Date(selectedTv.timeStarted).toString();
+    document.getElementById("lastupdate").innerHTML = new Date(selectedTv.update).toString();
+    document.getElementById("duration").innerHTML = sToTime(selectedTv.streamDetails.Duration);
+    document.getElementById("stalltime").innerHTML = sToTime(selectedTv.streamDetails.TotalST);
+    document.getElementById("islive").innerHTML = selectedTv.streamDetails.IsLive;
+    document.getElementById("dropframe").innerHTML = selectedTv.streamDetails.DroppedVF;
 }

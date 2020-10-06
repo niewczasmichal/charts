@@ -11,33 +11,45 @@ import (
 
 type server struct{}
 
+type streamDetails struct {
+	Asset      string
+	BitVersion string
+	IsLive     bool
+	Duration   int
+	DRM        string
+	DroppedVF  int
+	TotalST    int
+	TimeShift  int
+}
+
 type heartbeatDetails struct {
-	TotalRAM     int
-	UsedRAM      int
+	TotalRAM     float64
+	UsedRAM      float64
 	CPU          float64
 	VideoBitrate int
-	AudioBitrate int
 }
 
 //Heartbeat - basic structure sent by tvs
 type Heartbeat struct {
-	Model     string
-	Timestamp string
-	Details   heartbeatDetails
+	Model         string
+	Timestamp     string
+	StreamDetails streamDetails
+	Details       heartbeatDetails
 }
 
 //Heartbeats - structure stored by app
 type Heartbeats struct {
-	Model       string
-	TimeStarted string
-	TimeEnded   string
-	LastUpdate  string
-	Details     heartbeatsDetails
+	Model         string
+	TimeStarted   string
+	TimeEnded     string
+	LastUpdate    string
+	StreamDetails streamDetails
+	Details       heartbeatsDetails
 }
 
 type heartbeatsDetails struct {
-	TotalRAM     []int
-	UsedRAM      []int
+	TotalRAM     float64
+	UsedRAM      []float64
 	CPU          []float64
 	VideoBitrate []int
 	Iteration    []int
@@ -47,7 +59,11 @@ var hbarr map[string]*Heartbeats = make(map[string]*Heartbeats)
 
 func getHeartbeats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	js, err := json.Marshal(hbarr)
+	var restArr = make([]*Heartbeats, 0)
+	for _, element := range hbarr {
+		restArr = append(restArr, element)
+	}
+	js, err := json.Marshal(restArr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -56,16 +72,15 @@ func getHeartbeats(w http.ResponseWriter, r *http.Request) {
 }
 
 func setDetails(h Heartbeat, hs *Heartbeats) {
-	hs.Details.TotalRAM = append(hs.Details.TotalRAM, h.Details.TotalRAM)
 	hs.Details.UsedRAM = append(hs.Details.UsedRAM, h.Details.UsedRAM)
 	hs.Details.CPU = append(hs.Details.CPU, h.Details.CPU)
 	hs.Details.VideoBitrate = append(hs.Details.VideoBitrate, h.Details.VideoBitrate)
 	hs.LastUpdate = h.Timestamp
+	hs.StreamDetails = h.StreamDetails
 }
 
 func endHeartbeat(w http.ResponseWriter, r *http.Request) {
 	var h Heartbeat
-	// var hs Heartbeats
 	err := json.NewDecoder(r.Body).Decode(&h)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -75,7 +90,7 @@ func endHeartbeat(w http.ResponseWriter, r *http.Request) {
 	hs.TimeEnded = h.Timestamp
 	setDetails(h, hs)
 
-	f, err := os.Create("local\\log\\" + h.Model + "_" + h.Timestamp + ".json")
+	f, err := os.Create("local/log/" + h.Model + "_" + h.Timestamp + "_" + h.StreamDetails.Asset + "_" + h.StreamDetails.DRM + ".json")
 
 	if err != nil {
 		log.Fatal(err)
@@ -104,7 +119,7 @@ func saveHeartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if hbarr[h.Model] != nil && len(hbarr[h.Model].TimeEnded) > 0 {
+	if hbarr[h.Model] != nil && hbarr[h.Model].TimeEnded != "" {
 		delete(hbarr, h.Model)
 	}
 
@@ -114,6 +129,7 @@ func saveHeartbeat(w http.ResponseWriter, r *http.Request) {
 	} else {
 		hbarr[h.Model] = &Heartbeats{}
 		var hs = hbarr[h.Model]
+		hs.Details.TotalRAM = h.Details.TotalRAM
 		hs.Model = h.Model
 		hs.TimeStarted = h.Timestamp
 		hs.Details.Iteration = append(hs.Details.Iteration, 0)
