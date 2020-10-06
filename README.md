@@ -27,7 +27,7 @@ Project consist of two apps:
 			}
 	}
 ```
-2. At the end of playback it should send request with same structure as in point 1. to endpoint /heartbeat/end so the app will save results to file
+2. At the end of playback it should send request with same structure as in point 1. to endpoint /heartbeat/end so the app will save results to file in local/log/ directory
 
 #Running app
 1. Open directory in terminal
