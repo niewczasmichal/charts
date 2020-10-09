@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/rs/cors"
 )
@@ -89,6 +90,7 @@ func endHeartbeat(w http.ResponseWriter, r *http.Request) {
 	var hs = hbarr[h.Model]
 	hs.TimeEnded = h.Timestamp
 	setDetails(h, hs)
+	hs.Details.Iteration = append(hs.Details.Iteration, hs.Details.Iteration[len(hs.Details.Iteration)-1]+2)
 
 	f, err := os.Create("local/log/" + h.Model + "_" + h.Timestamp + "_" + h.StreamDetails.Asset + "_" + h.StreamDetails.DRM + ".json")
 
@@ -110,7 +112,30 @@ func endHeartbeat(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	var csv = ""
+	f2, err3 := os.Create("local/log/" + h.Model + "_" + h.Timestamp + "_" + h.StreamDetails.Asset + "_" + h.StreamDetails.DRM + ".csv")
+
+	if err3 != nil {
+		log.Fatal(err)
+	}
+
+	defer f2.Close()
+
+	for i, s := range hs.Details.Iteration {
+		csv += strconv.Itoa(s) + "," + floatToString(hs.Details.UsedRAM[i]) + "," + floatToString(hs.Details.CPU[i]) + "," + strconv.Itoa(hs.Details.VideoBitrate[i]) + "\n"
+	}
+
+	_, err4 := f2.WriteString(csv)
+
+	if err4 != nil {
+		log.Fatal(err)
+	}
 }
+
+func floatToString(inputNum float64) string {
+	return strconv.FormatFloat(inputNum, 'f', 6, 64)
+}
+
 func saveHeartbeat(w http.ResponseWriter, r *http.Request) {
 	var h Heartbeat
 	err := json.NewDecoder(r.Body).Decode(&h)
@@ -125,7 +150,7 @@ func saveHeartbeat(w http.ResponseWriter, r *http.Request) {
 
 	if hs, ok := hbarr[h.Model]; ok {
 		setDetails(h, hs)
-		hs.Details.Iteration = append(hs.Details.Iteration, hs.Details.Iteration[len(hs.Details.Iteration)-1]+1)
+		hs.Details.Iteration = append(hs.Details.Iteration, hs.Details.Iteration[len(hs.Details.Iteration)-1]+2)
 	} else {
 		hbarr[h.Model] = &Heartbeats{}
 		var hs = hbarr[h.Model]

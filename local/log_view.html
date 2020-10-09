@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>Dashboard</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.0/moment.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+        <script src="script_log.js"></script>
+        <style>
+            html, body {
+                height:100%;
+                width:100%;
+            }
+
+            div {
+                width: 45%;
+                height: 45%;
+                float: left;
+                border: 1px solid;
+            }
+
+            p {
+                margin: 2px;
+            }
+        </style>
+    </head>
+    <body onload="startup()">
+        <div>
+            <canvas id="ramchart"></canvas>
+        </div>
+        <div>
+            <canvas id="cpuchart"></canvas>
+        </div>
+        <div>
+            <canvas id="videochart"></canvas>
+        </div>  
+        <div>
+            <input type="file" id="input">
+            <p>Tizen version: <span id="tizenVersion"></span></p>
+            <p>Started at: <span id="timestart"></span></p>
+            <p>Last update at: <span id="lastupdate"></span></p>
+            <p>Finished at: <span id="timeend"></span></p>
+            <br>
+            <p>Bitmovin version: <span id="bitversion"></span></p>
+            <p>Asset name: <span id="asset"></span></p>
+            <p>DRM: <span id="drm"></span></p>
+            <p>Duration (VOD only): <span id="duration"></span></p>
+            <p>Is Live: <span id="islive"></span></p>
+            <br>
+            <p>Average RAM usage: <span id="avgRam"></span>MB/<span id="totalRam"></span>MB</p>
+            <p>Dropped frames: <span id="dropframe"></span></p>
+            <p>Total stall time: <span id="stalltime"></span></p>
+        </div>         
+    </body>
+</html>
